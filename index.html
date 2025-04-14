@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>mephisto 97.6 LIVE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Glacial+Indifference&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Glacial Indifference', sans-serif;
+      background: #ffffff;
+      color: #111;
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin: 0 auto;
+      max-width: 700px;
+    }
+
+    .player-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .play-button {
+      background-color: #0d1c48;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      color: white;
+      position: relative;
+      z-index: 1;
+    }
+
+    .play-button::before {
+      content: '';
+      display: block;
+      width: 0;
+      height: 0;
+      border-left: 18px solid white;
+      border-top: 12px solid transparent;
+      border-bottom: 12px solid transparent;
+      margin-left: 4px;
+    }
+
+    .playing::before {
+      content: none;
+    }
+
+    .slider-container {
+      background-color: #d4d7e1;
+      border-radius: 30px;
+      padding: 0.5rem 1rem;
+      display: flex;
+      align-items: center;
+      width: 250px;
+      gap: 0.5rem;
+    }
+
+    #muteIcon {
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      cursor: pointer;
+      accent-color: #0d1c48;
+    }
+
+.text-wrapper {
+  text-align: left;
+  font-size: 1.1rem;
+  line-height: 1.3;
+  margin-left: 0; /* kein zusätzlicher Rand */
+  padding-left: 0; /* ebenfalls kein Padding */
+}
+
+.text-line {
+  display: inline; /* Titel in einer Linie mit "Jetzt:" */
+}
+
+#title {
+  font-weight: bold;
+  font-size: 1.4rem;
+}
+
+#desc {
+  display: block;
+  margin-top: -0.7rem; /* kleiner Zeilenabstand */
+  padding-left: 3.0rem; /* identisch mit Breite von "Jetzt: " */
+  color: #444;
+  font-size: 1rem;
+}
+    .play-button.loading::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 66px;
+      height: 66px;
+      border: 4px solid #ccc;
+      border-top: 4px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      z-index: 0;
+    }
+
+    @keyframes spin {
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="player-container">
+      <button class="play-button" id="playBtn"></button>
+      <div class="slider-container">
+        <img id="muteIcon" src="icon_volume.png" alt="Lautstärke" />
+        <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.6" />
+      </div>
+    </div>
+
+    <div class="text-wrapper">
+      <div class="text-line">
+        <span>Jetzt:</span>
+        <span id="title">Lade Sendung...</span>
+      </div>
+      <div id="desc"> </div>
+    </div>
+  </div>
+
+  <audio id="audio" src="https://radiostream01.radio.uni-leipzig.de/mephisto976_livestream.mp3"></audio>
+
+  <script>
+    const calendarId = 'ksgnu2jvmxf2rcupjt';
+    const apiKey = 'befa0aac8038a98c0542e7b2ad56a4fea7e9b4c00b22777a79b7a58de04bdc1f';
+    const audio = document.getElementById('audio');
+    const playBtn = document.getElementById('playBtn');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const muteIcon = document.getElementById('muteIcon');
+
+    playBtn.addEventListener('click', () => {
+      if (audio.paused) {
+        audio.play();
+      } else {
+        audio.pause();
+      }
+    });
+
+    volumeSlider.addEventListener('input', () => {
+      audio.volume = volumeSlider.value;
+      if (audio.volume > 0) {
+        audio.muted = false;
+        muteIcon.src = 'icon_volume.png';
+      }
+    });
+
+    muteIcon.addEventListener('click', () => {
+      audio.muted = !audio.muted;
+      if (audio.muted) {
+        muteIcon.src = 'icon_muted.png';
+        volumeSlider.value = 0;
+        audio.volume = 0;
+      } else {
+        muteIcon.src = 'icon_volume.png';
+        volumeSlider.value = 0.6;
+        audio.volume = 0.6;
+      }
+    });
+
+    audio.addEventListener('play', () => {
+      playBtn.classList.add('playing');
+      playBtn.textContent = '◼';
+    });
+
+    audio.addEventListener('pause', () => {
+      playBtn.classList.remove('playing');
+      playBtn.textContent = '';
+    });
+
+    audio.addEventListener('waiting', () => {
+      playBtn.classList.add('loading');
+    });
+
+    audio.addEventListener('canplay', () => {
+      playBtn.classList.remove('loading');
+    });
+
+    audio.addEventListener('playing', () => {
+      playBtn.classList.remove('loading');
+    });
+
+    function updateCurrentShow() {
+      const now = new Date();
+      const timeMin = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
+      const timeMax = new Date(now.getTime() + 6 * 60 * 60 * 1000).toISOString();
+
+      fetch(`https://api.teamup.com/${calendarId}/events?startDate=${timeMin}&endDate=${timeMax}`, {
+        headers: { 'Teamup-Token': apiKey }
+      })
+        .then(res => res.json())
+        .then(data => {
+          const now = new Date();
+          const event = data.events.find(e => {
+            const start = new Date(e.start_dt);
+            const end = new Date(e.end_dt);
+            return start <= now && now <= end;
+          });
+
+          if (event) {
+            document.getElementById('title').textContent = event.title;
+            document.getElementById('desc').innerHTML = event.notes || '';
+          } else {
+            document.getElementById('title').textContent = 'Zurzeit keine laufende Sendung';
+            document.getElementById('desc').textContent = '';
+          }
+        })
+        .catch(err => {
+          document.getElementById('title').textContent = 'Fehler beim Laden';
+          document.getElementById('desc').textContent = '';
+          console.error(err);
+        });
+    }
+
+    updateCurrentShow();
+    setInterval(updateCurrentShow, 60 * 1000);
+  </script>
+</body>
+</html>
