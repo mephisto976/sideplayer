@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -45,21 +46,12 @@
       z-index: 1;
     }
 
-    .play-button::before {
-      content: '';
-      display: block;
-      width: 0;
-      height: 0;
-      border-left: 18px solid white;
-      border-top: 12px solid transparent;
-      border-bottom: 12px solid transparent;
-      margin-left: 4px;
+     .play-button img {
+      width: 20px;
+      height: 20px;
+      pointer-events: none;
     }
-
-    .playing::before {
-      content: none;
-    }
-
+ 
     .slider-container {
       background-color: #d4d7e1;
       border-radius: 30px;
@@ -137,7 +129,9 @@
 
   <div class="container">
     <div class="player-container">
-      <button class="play-button" id="playBtn"></button>
+      <button class="play-button" id="playBtn">
+        <img id="playIcon" src="icon_play.png" alt="Play" />
+      </button>
       <div class="slider-container">
         <img id="muteIcon" src="icon_volume.png" alt="Lautstärke" />
         <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.6" />
@@ -192,15 +186,16 @@
       }
     });
 
-    audio.addEventListener('play', () => {
-      playBtn.classList.add('playing');
-      playBtn.textContent = '◼';
-    });
+  audio.addEventListener('play', () => {
+  playBtn.classList.add('playing');
+  document.getElementById('playIcon').src = 'icon_stop.png';
+});
 
-    audio.addEventListener('pause', () => {
-      playBtn.classList.remove('playing');
-      playBtn.textContent = '';
-    });
+
+audio.addEventListener('pause', () => {
+  playBtn.classList.remove('playing');
+  document.getElementById('playIcon').src = 'icon_play.png';
+});
 
     audio.addEventListener('waiting', () => {
       playBtn.classList.add('loading');
